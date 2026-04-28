@@ -24,7 +24,7 @@ async function salvarNaPlanilha(dados) {
     valueInputOption: 'USER_ENTERED',
     requestBody: {
       values: [[
-        new Date().toLocaleString('pt-BR'),
+        new Date().toLocaleString('pt-BR', {timeZone: 'America/Sao_Paulo'}),
         dados.nome,
         dados.email,
         dados.telefone,
@@ -57,26 +57,20 @@ async function enviarMensagem(telefone, nome) {
 app.post('/webhook', async (req, res) => {
   try {
     const fields = req.body.data.fields;
-    console.log('FIELDS COMPLETO:', JSON.stringify(fields, null, 2));
 
     const getValue = (label) => {
       const field = fields.find(f => f.label === label);
       if (!field) return '';
       const val = field.value;
 
-      if (Array.isArray(val)) {
-        return val.map(v => {
-          if (typeof v === 'object' && v !== null) {
-            return v.text || v.label || v.value || JSON.stringify(v);
-          }
-          return v;
-        }).join(', ');
+      // Dropdown — cruza o value (ID) com as options para pegar o texto
+      if (field.type === 'DROPDOWN' && field.options) {
+        const selected = field.options.find(o => o.id === val);
+        return selected ? selected.text : val;
       }
 
-      if (typeof val === 'object' && val !== null) {
-        return val.text || val.label || val.value || JSON.stringify(val);
-      }
-
+      if (Array.isArray(val)) return val.join(', ');
+      if (typeof val === 'object' && val !== null) return JSON.stringify(val);
       return String(val) || '';
     };
 
