@@ -20,7 +20,7 @@ async function salvarNaPlanilha(dados) {
   const sheets = google.sheets({ version: 'v4', auth });
   await sheets.spreadsheets.values.append({
     spreadsheetId: SHEET_ID,
-    range: 'Sheet1!A:H',
+    range: 'Sheet1!A:I',
     valueInputOption: 'USER_ENTERED',
     requestBody: {
       values: [[
@@ -29,6 +29,7 @@ async function salvarNaPlanilha(dados) {
         dados.email,
         dados.telefone,
         dados.cidade,
+        dados.estado,
         dados.veiculo,
         dados.capacidade,
         dados.placa
@@ -64,7 +65,6 @@ app.post('/webhook', async (req, res) => {
       const val = field.value;
       const options = field.options || [];
 
-      // Array de IDs (dropdown) — busca o texto nas options
       if (Array.isArray(val)) {
         return val.map(id => {
           const opt = options.find(o => o.id === id);
@@ -72,7 +72,6 @@ app.post('/webhook', async (req, res) => {
         }).join(', ');
       }
 
-      // ID único (dropdown simples)
       if (options.length > 0 && typeof val === 'string') {
         const opt = options.find(o => o.id === val);
         if (opt) return opt.text;
@@ -86,7 +85,8 @@ app.post('/webhook', async (req, res) => {
       nome: getValue('Nome Completo'),
       email: getValue('Email'),
       telefone: getValue('WhatsApp'),
-      cidade: getValue('Cidade/Estado'),
+      cidade: getValue('Cidade'),
+      estado: getValue('Estado'),
       veiculo: getValue('Tipo de veículo'),
       capacidade: getValue('Capacidade de peso'),
       placa: getValue('Placa')
