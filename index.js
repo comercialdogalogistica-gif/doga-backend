@@ -20,8 +20,8 @@ async function salvarNaPlanilha(dados) {
   const sheets = google.sheets({ version: 'v4', auth });
   await sheets.spreadsheets.values.append({
     spreadsheetId: SHEET_ID,
-    range: 'Sheet1!A:G',
-    valueInputOption: 'RAW',
+    range: 'Sheet1!A:H',
+    valueInputOption: 'USER_ENTERED',
     requestBody: {
       values: [[
         new Date().toLocaleString('pt-BR'),
@@ -30,7 +30,8 @@ async function salvarNaPlanilha(dados) {
         dados.telefone,
         dados.cidade,
         dados.veiculo,
-        dados.capacidade
+        dados.capacidade,
+        dados.placa
       ]]
     }
   });
@@ -53,15 +54,24 @@ async function enviarMensagem(telefone, nome) {
 app.post('/webhook', async (req, res) => {
   try {
     const fields = req.body.data.fields;
-    const get = (label) => fields.find(f => f.label === label)?.value || '';
+
+    const getValue = (label) => {
+      const field = fields.find(f => f.label === label);
+      if (!field) return '';
+      const val = field.value;
+      if (Array.isArray(val)) return val.join(', ');
+      if (typeof val === 'object' && val !== null) return JSON.stringify(val);
+      return val || '';
+    };
 
     const dados = {
-      nome: get('Nome completo'),
-      email: get('Email'),
-      telefone: get('WhatsApp'),
-      cidade: get('Cidade/Estado'),
-      veiculo: get('Tipo de veículo'),
-      capacidade: get('Capacidade de peso')
+      nome: getValue('Nome Completo'),
+      email: getValue('Email'),
+      telefone: getValue('WhatsApp'),
+      cidade: getValue('Cidade/Estado'),
+      veiculo: getValue('Tipo de veículo'),
+      capacidade: getValue('Capacidade de peso'),
+      placa: getValue('Placa')
     };
 
     await salvarNaPlanilha(dados);
