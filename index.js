@@ -57,7 +57,8 @@ async function enviarMensagem(telefone, nome) {
 app.post('/webhook', async (req, res) => {
   try {
     const fields = req.body.data.fields;
-console.log('FIELDS COMPLETO:', JSON.stringify(fields, null, 2));
+    console.log('FIELDS COMPLETO:', JSON.stringify(fields, null, 2));
+
     const getValue = (label) => {
       const field = fields.find(f => f.label === label);
       if (!field) return '';
