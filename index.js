@@ -62,14 +62,22 @@ app.post('/webhook', async (req, res) => {
       const field = fields.find(f => f.label === label);
       if (!field) return '';
       const val = field.value;
+      const options = field.options || [];
 
-      // Dropdown — cruza o value (ID) com as options para pegar o texto
-      if (field.type === 'DROPDOWN' && field.options) {
-        const selected = field.options.find(o => o.id === val);
-        return selected ? selected.text : val;
+      // Array de IDs (dropdown) — busca o texto nas options
+      if (Array.isArray(val)) {
+        return val.map(id => {
+          const opt = options.find(o => o.id === id);
+          return opt ? opt.text : id;
+        }).join(', ');
       }
 
-      if (Array.isArray(val)) return val.join(', ');
+      // ID único (dropdown simples)
+      if (options.length > 0 && typeof val === 'string') {
+        const opt = options.find(o => o.id === val);
+        if (opt) return opt.text;
+      }
+
       if (typeof val === 'object' && val !== null) return JSON.stringify(val);
       return String(val) || '';
     };
