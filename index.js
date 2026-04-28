@@ -62,8 +62,20 @@ app.post('/webhook', async (req, res) => {
       const field = fields.find(f => f.label === label);
       if (!field) return '';
       const val = field.value;
-      if (Array.isArray(val)) return val.join(', ');
-      if (typeof val === 'object' && val !== null) return JSON.stringify(val);
+
+      if (Array.isArray(val)) {
+        return val.map(v => {
+          if (typeof v === 'object' && v !== null) {
+            return v.text || v.label || v.value || JSON.stringify(v);
+          }
+          return v;
+        }).join(', ');
+      }
+
+      if (typeof val === 'object' && val !== null) {
+        return val.text || val.label || val.value || JSON.stringify(val);
+      }
+
       return String(val) || '';
     };
 
