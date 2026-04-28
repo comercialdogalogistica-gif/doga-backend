@@ -38,11 +38,14 @@ async function salvarNaPlanilha(dados) {
 }
 
 async function enviarMensagem(telefone, nome) {
-  const numero = telefone.replace(/\D/g, '');
+  let numero = telefone.replace(/\D/g, '');
+  if (!numero.startsWith('55')) {
+    numero = '55' + numero;
+  }
   await axios.post(
     `${EVOLUTION_URL}/message/sendText/${INSTANCE_NAME}`,
     {
-      number: `55${numero}`,
+      number: numero,
       textMessage: {
         text: `Olá ${nome}! 🚛\n\nSeu cadastro na *Doga Logística* foi confirmado!\n\nClique no link abaixo para entrar no nosso canal de fretes:\n${CANAL_LINK}\n\nBem-vindo(a)! 🎉`
       }
@@ -61,7 +64,7 @@ app.post('/webhook', async (req, res) => {
       const val = field.value;
       if (Array.isArray(val)) return val.join(', ');
       if (typeof val === 'object' && val !== null) return JSON.stringify(val);
-      return val || '';
+      return String(val) || '';
     };
 
     const dados = {
@@ -74,12 +77,14 @@ app.post('/webhook', async (req, res) => {
       placa: getValue('Placa')
     };
 
+    console.log('Dados recebidos:', JSON.stringify(dados));
+
     await salvarNaPlanilha(dados);
     await enviarMensagem(dados.telefone, dados.nome);
 
     res.status(200).json({ success: true });
   } catch (error) {
-    console.error(error?.response?.data || error.message);
+    console.error('Erro:', error?.response?.data || error.message);
     res.status(500).json({ error: error.message });
   }
 });
